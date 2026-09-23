@@ -98,10 +98,24 @@ try {
     }
 
     Invoke-Step 'Issuer UI state smoke suite' {
-        $env:QTLIC_SKIP_ONBOARDING = '1'
-        $env:QT_QPA_PLATFORM = 'offscreen'
-        & (Join-Path $binRoot 'issuer-ui-smoke-tests.exe')
-        Assert-LastExit 'issuer-ui-smoke-tests'
+        try {
+            $env:QTLIC_SKIP_ONBOARDING = '1'
+            $env:QT_QPA_PLATFORM = 'offscreen'
+            & (Join-Path $binRoot 'issuer-ui-smoke-tests.exe')
+            Assert-LastExit 'issuer-ui-smoke-tests'
+        }
+        finally {
+            if ($null -eq $oldOnboarding) {
+                Remove-Item Env:QTLIC_SKIP_ONBOARDING -ErrorAction SilentlyContinue
+            } else {
+                $env:QTLIC_SKIP_ONBOARDING = $oldOnboarding
+            }
+            if ($null -eq $oldPlatform) {
+                Remove-Item Env:QT_QPA_PLATFORM -ErrorAction SilentlyContinue
+            } else {
+                $env:QT_QPA_PLATFORM = $oldPlatform
+            }
+        }
     }
 
     Invoke-Step 'Real-world CLI round trip' {
