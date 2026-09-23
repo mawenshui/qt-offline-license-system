@@ -14,9 +14,22 @@ $stageRoot = Join-Path $distRoot "stage-v$Version"
 $appStage = Join-Path $stageRoot "qt-offline-license-system-v$Version-windows-x64"
 $sdkStage = Join-Path $stageRoot "qt-offline-license-runtime-sdk-v$Version"
 $windeployqt = Join-Path $QtBin 'windeployqt.exe'
+$qmake = Join-Path $QtBin 'qmake.exe'
 
 if (-not (Test-Path -LiteralPath $windeployqt -PathType Leaf)) {
     throw "windeployqt.exe not found under QtBin: $QtBin"
+}
+if (-not (Test-Path -LiteralPath $qmake -PathType Leaf)) {
+    throw "qmake.exe not found under QtBin: $QtBin"
+}
+$qtPluginRoot = (& $qmake -query QT_INSTALL_PLUGINS | Select-Object -First 1)
+if ([string]::IsNullOrWhiteSpace($qtPluginRoot)) {
+    throw 'qmake did not report QT_INSTALL_PLUGINS'
+}
+$qtPluginRoot = $qtPluginRoot.Trim()
+$windowsPlatformPlugin = Join-Path $qtPluginRoot 'platforms\qwindows.dll'
+if (-not (Test-Path -LiteralPath $windowsPlatformPlugin -PathType Leaf)) {
+    throw "Required Qt platform plugin not found: $windowsPlatformPlugin"
 }
 
 $requiredBinaries = @(
@@ -49,8 +62,18 @@ Copy-Item -LiteralPath (Join-Path $projectRoot 'third_party\libsodium\LICENSE') 
 
 foreach ($name in @('QtLicenseIssuer.exe', 'QtHardwareCollector.exe',
                      'qt-license-cli.exe', 'license-core-tests.exe')) {
-    & $windeployqt --release --no-translations --no-opengl-sw (Join-Path $appStage $name)
+    & $windeployqt --release --no-translations --no-opengl-sw --no-plugins `
+        (Join-Path $appStage $name)
     if ($LASTEXITCODE -ne 0) { throw "windeployqt failed for $name" }
+}
+$platformStage = Join-Path $appStage 'platforms'
+New-Item -ItemType Directory -Path $platformStage -Force | Out-Null
+Copy-Item -LiteralPath $windowsPlatformPlugin -Destination $platformStage
+$windowsStylePlugin = Join-Path $qtPluginRoot 'styles\qwindowsvistastyle.dll'
+if (Test-Path -LiteralPath $windowsStylePlugin -PathType Leaf) {
+    $styleStage = Join-Path $appStage 'styles'
+    New-Item -ItemType Directory -Path $styleStage -Force | Out-Null
+    Copy-Item -LiteralPath $windowsStylePlugin -Destination $styleStage
 }
 
 $runtimeSources = @(
