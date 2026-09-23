@@ -13,15 +13,16 @@ $distRoot = Join-Path $projectRoot 'dist'
 $stageRoot = Join-Path $distRoot "stage-v$Version"
 $appStage = Join-Path $stageRoot "qt-offline-license-system-v$Version-windows-x64"
 $sdkStage = Join-Path $stageRoot "qt-offline-license-runtime-sdk-v$Version"
-$windeployqt = Join-Path $QtBin 'windeployqt.exe'
 $qmake = Join-Path $QtBin 'qmake.exe'
 
-if (-not (Test-Path -LiteralPath $windeployqt -PathType Leaf)) {
-    throw "windeployqt.exe not found under QtBin: $QtBin"
-}
 if (-not (Test-Path -LiteralPath $qmake -PathType Leaf)) {
     throw "qmake.exe not found under QtBin: $QtBin"
 }
+$qtVersion = (& $qmake -query QT_VERSION | Select-Object -First 1)
+if ([string]::IsNullOrWhiteSpace($qtVersion)) {
+    throw 'qmake did not report QT_VERSION'
+}
+$qtMajor = $qtVersion.Trim().Split('.')[0]
 $qtPluginRoot = (& $qmake -query QT_INSTALL_PLUGINS | Select-Object -First 1)
 if ([string]::IsNullOrWhiteSpace($qtPluginRoot)) {
     throw 'qmake did not report QT_INSTALL_PLUGINS'
@@ -60,11 +61,15 @@ New-Item -ItemType Directory -Path (Join-Path $appStage 'licenses') -Force | Out
 Copy-Item -LiteralPath (Join-Path $projectRoot 'third_party\libsodium\LICENSE') `
     -Destination (Join-Path $appStage 'licenses\libsodium-LICENSE.txt')
 
-foreach ($name in @('QtLicenseIssuer.exe', 'QtHardwareCollector.exe',
-                     'qt-license-cli.exe', 'license-core-tests.exe')) {
-    & $windeployqt --release --no-translations --no-opengl-sw --no-plugins `
-        (Join-Path $appStage $name)
-    if ($LASTEXITCODE -ne 0) { throw "windeployqt failed for $name" }
+foreach ($name in @(
+    "Qt${qtMajor}Core.dll", "Qt${qtMajor}Gui.dll", "Qt${qtMajor}Widgets.dll",
+    'libgcc_s_seh-1.dll', 'libstdc++-6.dll', 'libwinpthread-1.dll',
+    'libEGL.dll', 'libGLESv2.dll', 'D3Dcompiler_47.dll')) {
+    $source = Join-Path $QtBin $name
+    if (-not (Test-Path -LiteralPath $source -PathType Leaf)) {
+        throw "Required Qt runtime file not found: $source"
+    }
+    Copy-Item -LiteralPath $source -Destination $appStage
 }
 $platformStage = Join-Path $appStage 'platforms'
 New-Item -ItemType Directory -Path $platformStage -Force | Out-Null
