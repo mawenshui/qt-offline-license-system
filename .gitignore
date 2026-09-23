@@ -13,9 +13,9 @@ debug/
 release/
 
 # Build and release output
-bin/
-dist/
-build*/
+/bin/
+/dist/
+/build*/
 *.o
 *.obj
 
