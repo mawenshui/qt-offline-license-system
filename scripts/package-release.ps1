@@ -73,9 +73,16 @@ Copy-Item -LiteralPath (Join-Path $projectRoot 'packaging\runtime-sdk\README.md'
     -Destination $sdkStage
 Copy-Item -LiteralPath (Join-Path $projectRoot 'packaging\runtime-sdk\examples') `
     -Destination $sdkStage -Recurse
-Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Qt应用接入指南.md') `
+$integrationGuideName = 'Qt' + (-join @(
+    [char]0x5e94, [char]0x7528, [char]0x63a5, [char]0x5165,
+    [char]0x6307, [char]0x5357)) + '.md'
+$securityGuideName = (-join @(
+    [char]0x5b89, [char]0x5168, [char]0x8fb9, [char]0x754c,
+    [char]0x4e0e, [char]0x8fd0, [char]0x7ef4, [char]0x6307,
+    [char]0x5357)) + '.md'
+Copy-Item -LiteralPath (Join-Path $projectRoot (Join-Path 'docs' $integrationGuideName)) `
     -Destination (Join-Path $sdkStage 'docs')
-Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\安全边界与运维指南.md') `
+Copy-Item -LiteralPath (Join-Path $projectRoot (Join-Path 'docs' $securityGuideName)) `
     -Destination (Join-Path $sdkStage 'docs')
 Copy-Item -LiteralPath (Join-Path $projectRoot 'third_party\libsodium\LICENSE') `
     -Destination (Join-Path $sdkStage 'third_party\libsodium')

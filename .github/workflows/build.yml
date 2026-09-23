@@ -29,6 +29,6 @@ jobs:
           qmake ..\LicenseSystem.pro CONFIG+=release
           mingw32-make -j2
 
-      - name: Run core tests
+      - name: Run full-flow tests
         shell: pwsh
-        run: .\bin\license-core-tests.exe
+        run: .\tests\full_flow.ps1 -Version 1.0.1 -SkipBuild

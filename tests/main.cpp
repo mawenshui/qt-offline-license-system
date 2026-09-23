@@ -13,12 +13,14 @@
 #include <cstdio>
 
 #include "batch_issuer.h"
+#include "audit_logger.h"
 #include "crypto_provider.h"
 #include "hardware_fingerprint.h"
 #include "key_vault.h"
 #include "license_codec.h"
 #include "license_runtime.h"
 #include "offline_time_guard.h"
+#include "runtime_compatibility.h"
 
 using namespace qtlic;
 
@@ -562,6 +564,45 @@ int main(int argc, char *argv[])
                && error.contains(QStringLiteral("输出名无效或重复"))
                && !QFileInfo::exists(reservedOutput),
                QStringLiteral("Windows 保留设备名未在批量预检阶段拒绝"))) return 1;
+
+    const RuntimeCompatibilityResult compatible =
+            RuntimeCompatibility::check(QStringLiteral("1.x"), payload);
+    if (!check(compatible.compatible && compatible.minimumVersion == QLatin1String("1.0.0"),
+               QStringLiteral("Runtime 1.x 兼容预检失败"))) return 1;
+    const RuntimeCompatibilityResult incompatible =
+            RuntimeCompatibility::check(QStringLiteral("0.x"), payload);
+    if (!check(!incompatible.compatible
+               && incompatible.message.contains(QStringLiteral("最低兼容版本")),
+               QStringLiteral("旧 Runtime 未被兼容预检拒绝"))) return 1;
+
+    const QString auditPath = temp.filePath(QStringLiteral("audit.jsonl"));
+    AuditEvent audit;
+    audit.action = QStringLiteral("issue_license");
+    audit.outcome = QStringLiteral("success");
+    audit.productId = productId;
+    audit.subjectId = payload.licenseId;
+    audit.filePath = licensePath;
+    audit.message = QStringLiteral("customer=C001");
+    if (!check(AuditLogger::append(audit, auditPath, &error), error)) return 1;
+    audit.action = QStringLiteral("verify_license");
+    if (!check(AuditLogger::append(audit, auditPath, &error), error)) return 1;
+    int auditRecords = 0;
+    if (!check(AuditLogger::verify(auditPath, &auditRecords, &error)
+               && auditRecords == 2, QStringLiteral("审计日志哈希链验证失败: %1").arg(error))) {
+        return 1;
+    }
+    QFile auditFile(auditPath);
+    if (!check(auditFile.open(QIODevice::ReadOnly), QStringLiteral("无法读取审计测试日志"))) return 1;
+    QByteArray auditBytes = auditFile.readAll();
+    auditFile.close();
+    if (!check(!auditBytes.contains("password") && !auditBytes.contains("secret_key"),
+               QStringLiteral("审计日志包含敏感字段"))) return 1;
+    auditBytes.replace("issue_license", "issue_licensf");
+    if (!check(writeBytes(auditPath, auditBytes), QStringLiteral("无法篡改审计测试日志"))) return 1;
+    error.clear();
+    if (!check(!AuditLogger::verify(auditPath, nullptr, &error)
+               && error.contains(QStringLiteral("哈希链")),
+               QStringLiteral("审计日志篡改未被检测"))) return 1;
 
     reopened.clearSecrets();
     keys.clearSecrets();

@@ -122,4 +122,12 @@ include($$PWD/path/to/qt-license-runtime-sdk-vX.Y.Z/QtLicenseRuntime.pri)
 该 `.pri` 只编译运行端所需源码，不包含密钥库和批量签发实现。Windows x64 发布时复制包内 `third_party/libsodium/libsodium-win64/bin/libsodium-26.dll` 到业务可执行文件目录，并使用业务 Qt 套件的 `windeployqt --release` 部署 Qt 运行库。
 
 源码包不会提供 `qtlicense_runtime_config.h`，因为该文件包含每个产品独有的解密密钥，必须由使用者自己的签发密钥库导出并在私有构建环境使用。
+
+## 8. 版本兼容
+
+- v1.0.1 签发器生成授权容器和载荷 `version: 1`，要求目标 Runtime SDK 系列为 `1.x`，最低支持版本为 `1.0.0`。
+- 签发时选择目标 Runtime；不兼容系列会在生成文件前被拒绝。
+- 应用升级 Runtime SDK 时，必须重新执行启动验证、检查点、硬件不匹配、时间回拨和旧授权回归。
+- Release 中应用包与 Runtime SDK 包使用同一产品版本号。不要混用来源不明或被修改的源码包；先核对 `SHA256SUMS.txt`。
+
 - 所有本地纯软件授权最终都能被拥有管理员/root 和调试能力的攻击者补丁绕过；需更高对抗等级时增加 TPM/安全芯片、USB Key 或周期性在线证明。

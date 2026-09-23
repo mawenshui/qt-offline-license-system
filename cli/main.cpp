@@ -11,6 +11,7 @@
 #include "hardware_fingerprint.h"
 #include "key_vault.h"
 #include "license_codec.h"
+#include "version.h"
 
 using namespace qtlic;
 
@@ -148,6 +149,7 @@ int fail(const QString &error)
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
+    QCoreApplication::setApplicationVersion(QStringLiteral(QTLIC_VERSION_STR));
     const QStringList args = app.arguments();
     if (args.size() < 2) {
         printUsage();

@@ -8,20 +8,19 @@
 
 ## 本地验证
 
-至少执行：
+提交前执行统一全流程验证：
 
 ```powershell
-qmake ..\qt-offline-license-system\LicenseSystem.pro CONFIG+=release
-mingw32-make -j4
-..\qt-offline-license-system\bin\license-core-tests.exe
+.\tests\full_flow.ps1 -Version 1.0.1
 ```
 
-涉及真实硬件、CLI 或协议的改动还需执行：
+仅需快速验证核心逻辑时可执行：
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass `
-  -File ..\qt-offline-license-system\tests\real_world_cli.ps1
+.\bin\license-core-tests.exe
 ```
+
+全流程脚本会执行 Release 构建、核心测试、签发器 UI 状态测试、真实 CLI 闭环、发布打包、校验值与敏感文件检查、发布包 GUI 启动和 Runtime SDK 独立构建。发布前不得使用快速检查替代全流程验证。
 
 ## Pull Request
 

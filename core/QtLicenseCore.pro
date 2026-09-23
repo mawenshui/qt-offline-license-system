@@ -14,6 +14,7 @@ MOC_DIR = $$OUT_PWD/moc
 include($$LICENSESYSTEM_ROOT/third_party/libsodium/libsodium.pri)
 
 HEADERS += \
+    audit_logger.h \
     batch_issuer.h \
     crypto_provider.h \
     hardware_fingerprint.h \
@@ -21,9 +22,12 @@ HEADERS += \
     license_codec.h \
     license_runtime.h \
     license_types.h \
-    offline_time_guard.h
+    offline_time_guard.h \
+    runtime_compatibility.h \
+    version.h
 
 SOURCES += \
+    audit_logger.cpp \
     batch_issuer.cpp \
     crypto_provider.cpp \
     hardware_fingerprint.cpp \
@@ -31,6 +35,7 @@ SOURCES += \
     license_codec.cpp \
     license_runtime.cpp \
     license_types.cpp \
-    offline_time_guard.cpp
+    offline_time_guard.cpp \
+    runtime_compatibility.cpp
 
 win32: LIBS += -lcrypt32
