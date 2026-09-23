@@ -1,0 +1,9 @@
+* text=auto eol=lf
+
+*.dll binary
+*.a binary
+*.gz binary
+*.exe binary
+*.zip binary
+
+third_party/** -whitespace

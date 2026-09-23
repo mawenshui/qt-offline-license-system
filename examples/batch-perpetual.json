@@ -1,0 +1,31 @@
+{
+  "schema": "qt-license-batch",
+  "version": 1,
+  "defaults": {
+    "product_id": "ProductId",
+    "license_mode": "perpetual",
+    "binding_mode": "all",
+    "features": ["basic"]
+  },
+  "records": [
+    {
+      "row_id": "1",
+      "customer_id": "C001",
+      "customer_name": "示例客户一",
+      "hardware": [
+        {"slot": "board", "type": "board", "values": ["BOARD-001"]}
+      ],
+      "output_name": "C001.qtlic"
+    },
+    {
+      "row_id": "2",
+      "customer_id": "C002",
+      "customer_name": "示例客户二",
+      "hardware": [
+        {"slot": "board", "type": "board", "values": ["BOARD-002"]},
+        {"slot": "system-uuid", "type": "system_uuid", "values": ["UUID-002"]}
+      ],
+      "output_name": "C002.qtlic"
+    }
+  ]
+}

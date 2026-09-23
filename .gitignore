@@ -1,0 +1,26 @@
+# Generated secrets and customer artifacts
+*.qtkv
+*.qtlic
+*.qreq
+runtime-config.json
+runtime_config.h
+
+# qmake/IDE local files
+*.pro.user*
+Makefile*
+.qmake.stash
+debug/
+release/
+
+# Build and release output
+bin/
+dist/
+build*/
+*.o
+*.obj
+
+# Editor and OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
